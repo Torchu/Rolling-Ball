@@ -1,35 +1,66 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class TiltScript : MonoBehaviour
 {
     private Touch touch;
 
-    private Vector2 touchPosition;
 
-    private Quaternion rotationX, rotationZ;
+    private float rotationX, rotationZ;
 
-    private float titlSpeedModifier = 0.1f;
+    private float tiltSpeedModifier = 5f;
+
+    // Variable to be set to true if you win
+	static bool youWin;
+
+    // Reference to WinText game object to control its appearance
+	// Text game object can be added in inspector because of [SerializeField] line
+	[SerializeField]
+	GameObject winText;
+
+    private void Start() {
+
+        // Turn WinText off at the start
+		winText.gameObject.SetActive(false);
+
+        // You don't win at the start
+		youWin = false;
+    }
 
     // Update is called once per frame
     void Update()
     {
-        if(Input.touchCount > 0)
-        {
-            touch = Input.GetTouch(0);
 
-            switch (touch.phase)
-            {
-                case TouchPhase.Moved:
-                    rotationX = Quaternion.Euler(-touch.deltaPosition.x * titlSpeedModifier, 0f, 0f);
-                    transform.rotation *= rotationX;
+        Vector3 tilt = Input.acceleration;
 
-                    rotationZ = Quaternion.Euler(0f, 0f, -touch.deltaPosition.y * titlSpeedModifier);
-                    transform.rotation *= rotationZ;
+        rotationX = -tilt.x * tiltSpeedModifier;
+        transform.rotation *= Quaternion.Euler(rotationX, 0f, 0f);
+        
+        rotationZ = -tilt.y * tiltSpeedModifier;
+        transform.rotation *= Quaternion.Euler(0f, 0f, rotationZ);
 
-                    break;
-            }
-        }
+        // If you win
+		if (youWin) {
+
+			// then turn YouWin sign on
+			winText.gameObject.SetActive (true);
+
+			// Restart scene to play again in 2 seconds
+			Invoke ("RestartScene", 2f);
+		}
     }
+
+    // Method is invoked by exit hole game object when ball touches its collider
+	public static void setYouWinToTrue()
+	{
+		youWin = true;
+	}
+
+    // Method to restart current scene
+	void RestartScene()
+	{
+		SceneManager.LoadScene ("SampleScene");
+	}
 }
